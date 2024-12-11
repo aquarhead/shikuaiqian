@@ -62,6 +62,33 @@ pub fn opt(input: &str) -> usize {
   curr.iter().map(|(_, cnt)| cnt).sum()
 }
 
+pub fn localfn(input: &str) -> usize {
+  let mut curr: HashMap<_, _> = input
+    .split_ascii_whitespace()
+    .map(|x| (usize::from_str(x).unwrap(), 1))
+    .collect();
+
+  for _ in 0..75 {
+    let mut next: HashMap<usize, usize> = HashMap::with_capacity(2 * curr.len());
+    for (i, cnt) in curr.iter() {
+      let mut update = |x: usize| *next.entry(x).or_insert(0) += cnt;
+      if *i == 0 {
+        update(1);
+      } else {
+        let istr = i.to_string();
+        if istr.len() & 1 == 0 {
+          update(usize::from_str(&istr[..istr.len() / 2]).unwrap());
+          update(usize::from_str(&istr[istr.len() / 2..]).unwrap());
+        } else {
+          update(*i * 2024);
+        }
+      }
+    }
+    curr = next;
+  }
+  curr.iter().map(|(_, cnt)| cnt).sum()
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -71,6 +98,10 @@ mod tests {
     assert_eq!(
       alloc("5 62914 65 972 0 805922 6521 1639064"),
       opt("5 62914 65 972 0 805922 6521 1639064")
+    );
+    assert_eq!(
+      alloc("5 62914 65 972 0 805922 6521 1639064"),
+      localfn("5 62914 65 972 0 805922 6521 1639064")
     );
   }
 }
