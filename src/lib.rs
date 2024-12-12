@@ -89,6 +89,61 @@ pub fn localfn(input: &str) -> usize {
   curr.iter().map(|(_, cnt)| cnt).sum()
 }
 
+struct Blink<I: Iterator<Item = (usize, usize)>> {
+  counts: I,
+  right: Option<(usize, usize)>,
+}
+
+impl<I: Iterator<Item = (usize, usize)>> Blink<I> {
+  fn from(counts: I) -> Self {
+    Self { counts, right: None }
+  }
+}
+
+impl<I: Iterator<Item = (usize, usize)>> Iterator for Blink<I> {
+  type Item = (usize, usize);
+
+  fn next(&mut self) -> Option<Self::Item> {
+    if let Some(r) = self.right {
+      self.right = None;
+      return Some(r);
+    }
+    if let Some((stone, count)) = self.counts.next() {
+      if stone == 0 {
+        Some((1, count))
+      } else {
+        let istr = stone.to_string();
+        if istr.len() & 1 == 0 {
+          self.right = Some((usize::from_str(&istr[..istr.len() / 2]).unwrap(), count));
+          Some((usize::from_str(&istr[istr.len() / 2..]).unwrap(), count))
+        } else {
+          Some((stone * 2024, count))
+        }
+      }
+    } else {
+      None
+    }
+  }
+}
+
+pub fn makeiter(input: &str) -> usize {
+  let curr: HashMap<_, _> = input
+    .split_ascii_whitespace()
+    .map(|x| (usize::from_str(x).unwrap(), 1))
+    .collect();
+
+  (0..75)
+    .fold(curr, |acc, _| {
+      let cap = 2 * acc.len();
+      Blink::from(acc.into_iter()).fold(HashMap::with_capacity(cap), |mut acc, (x, cnt)| {
+        *acc.entry(x).or_insert(0) += cnt;
+        acc
+      })
+    })
+    .values()
+    .sum()
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -102,6 +157,10 @@ mod tests {
     assert_eq!(
       alloc("5 62914 65 972 0 805922 6521 1639064"),
       localfn("5 62914 65 972 0 805922 6521 1639064")
+    );
+    assert_eq!(
+      alloc("5 62914 65 972 0 805922 6521 1639064"),
+      makeiter("5 62914 65 972 0 805922 6521 1639064")
     );
   }
 }

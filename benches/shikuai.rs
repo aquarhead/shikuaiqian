@@ -21,5 +21,11 @@ fn localfn(c: &mut Criterion) {
   });
 }
 
-criterion_group!(benches, alloc, opt, localfn);
+fn makeiter(c: &mut Criterion) {
+  c.bench_function("makeiter", |b| {
+    b.iter(|| shikuaiqian::makeiter(black_box("5 62914 65 972 0 805922 6521 1639064")))
+  });
+}
+
+criterion_group!(benches, opt, localfn, makeiter, alloc);
 criterion_main!(benches);
